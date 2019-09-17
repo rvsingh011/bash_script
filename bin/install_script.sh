@@ -144,9 +144,6 @@ EOF
 #   2. export the downloaded config.
 function 2_export_kube_config()
 {
-    # this is weired, as these are already in the image but some it fails 
-    ibmcloud plugin install kubernetes-service
-    ibmcloud plugin install container-registry
     curl -X GET "${ibm_ks_endpoint}/global/v1/clusters/${NAME}/config" -H "accept: application/json" -H "Authorization: ${IC_IAM_TOKEN}" -H "X-Auth-Refresh-Token: ${IC_IAM_REFRESH_TOKEN}" -o /tmp/kubeconfig.zip
     chmod +x /tmp/kubeconfig.zip
     rm -f /tmp/kube_conf_dtls.txt
@@ -281,6 +278,9 @@ exit $(kubectl get pods -n ${NAMESPACE} ${POD} -o jsonpath="{.status.containerSt
 run_remote_job()
 {
     1_build_config_json
+    # this is weired, as these are already in the image but some it fails 
+    ibmcloud plugin install kubernetes-service
+    ibmcloud plugin install container-registry
     #chek IBMcloud login is working
     ibmcloud ks clusters
     2_export_kube_config
@@ -291,5 +291,4 @@ run_remote_job()
 
 run_remote_job
 
-sleep 6000
 
