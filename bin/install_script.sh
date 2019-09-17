@@ -183,7 +183,7 @@ _init
 # JOB name should have workspace id or name.
 
 currnet_timestamp=`date "+%Y%m%d-%H%M%S"`
-job_name = "installer_"$currnet_timestamp
+job_name="installer_"$currnet_timestamp
 
 export NAMESPACE=schematics
 
