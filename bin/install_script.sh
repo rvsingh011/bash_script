@@ -29,9 +29,11 @@ _init()
     ibmcloud plugin install kubernetes-service
     ibmcloud plugin install container-registry
     ibmcloud plugin list
-    printf "%s" "$CONFIG_JSON" > /home/appuser/.bluemix/config.json
-    rm -f /home/nobody/.bluemix/config.json
-    find / -name config.jso
+    echo "CONFIG_JSON :" ${CONFIG_JSON}
+    printf "%s" "${CONFIG_JSON}" > /home/appuser/.bluemix/config.json
+    cp /home/appuser/.bluemix/config.json /home/nobody/.bluemix/
+    echo "printing config.json ...."
+    cat /home/nobody/.bluemix/config.json
     #printf "%s" "$CONFIG_JSON" > /root/.bluemix/config.json
     cat /home/appuser/.bluemix/config.json
     #cat /root/.bluemix/config.json
