@@ -49,7 +49,7 @@ function build_config_json
     if [[ $iss_api == *test* ]]; then
         echo "It is stage evn."
         is_prod=false
-        ibm_ks_endpoint="https://containers.test.cloud.ibm.com/global"
+        ibm_ks_endpoint="https://containers.test.cloud.ibm.com"
         api_endpoint="https://test.cloud.ibm.com"
         iam_endpoint="https://iam.test.cloud.ibm.com"
         cloud_name="staging"
@@ -127,17 +127,16 @@ EOF
     cat /tmp/config.json
     cp /tmp/config.json /home/appuser/.bluemix/
     mkdir -p /home/nobody/.bluemix/
-    mv /tmp/config.json /home/nobody/.bluemix/
-    
+    cp /tmp/config.json /home/nobody/.bluemix/    
     
 }
 
 
 _init()
 {
-    build_config_json
     ibmcloud plugin install kubernetes-service
     ibmcloud plugin install container-registry
+    build_config_json
     #chek IBMcloud login is working
     ibmcloud ks clusters
     cat /home/appuser/.bluemix/config.json
