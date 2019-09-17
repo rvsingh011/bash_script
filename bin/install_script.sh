@@ -127,7 +127,9 @@ EOF
     cat /tmp/config.json
     cp /tmp/config.json /home/appuser/.bluemix/
     mkdir -p /home/nobody/.bluemix/
-    cp /tmp/config.json /home/nobody/.bluemix/    
+    cp /tmp/config.json /home/nobody/.bluemix/  
+    cat /home/appuser/.bluemix/config.json
+    cat /home/nobody/.bluemix/config.json
     
 }
 
