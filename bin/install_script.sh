@@ -5,7 +5,7 @@ printenv
 
 
 # TODO Remove verbose once verified in stage.
-set -e
+set -x
 #kube_dir=""
 #apikey=""
 namespace=schematics
