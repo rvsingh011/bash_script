@@ -136,7 +136,7 @@ EOF
 _init()
 {
     build_config_json
-    bmcloud plugin install kubernetes-service
+    ibmcloud plugin install kubernetes-service
     ibmcloud plugin install container-registry
     #chek IBMcloud login is working
     ibmcloud ks clusters
