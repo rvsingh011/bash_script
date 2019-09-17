@@ -1,9 +1,7 @@
 #!/bin/bash
 
-
-
 # TODO Remove verbose once verified in stage.
-set -x
+set -xe
 printenv
 
 #kube_dir=""
@@ -15,10 +13,11 @@ api_endpoint=""
 iam_endpoint=""
 cloud_name=""
 
+# Catch block, om error
+# cleaning up all generated details.
 function finish {
     echo "** Removing pod's secret"
     #kubectl delete secret ibm-content-mgmt-script-pod-secret-${JOB_ID} -n ${JOB_NAMESPACE} > /dev/null 2>&1 || true
-    #ic iam api-key-delete OC_TEMP -f > /dev/null 2>&1 || true
     echo "deleting KUBECONFIG details..."
     #rm -rf $kube_dir/
     ic iam api-key-delete OC_TEMP -f > /dev/null 2>&1
@@ -32,8 +31,15 @@ function finish {
 }
 trap finish 0 1 2 3 6 15
 
-function build_config_json
+# Consstructing the config.json from the IAM_TOKEN which is available as env variable.
+# 1. Decode jwt json payload details from IAM_TOKEN
+# 2. Replace the generaed values into the config.json template.
+# 3. Copy the config.json to /home/appuser/.bluemix
+# 4. Also put the copy into /home/nobofy/.bluemix (logically this is not required, 
+#      but sometime IAM autheication fails as it expects the file in this location)
+function 1_build_config_json
 {
+    #TODO remove echo statements after the testing
     iam_payload=$(echo -n "$IC_IAM_TOKEN" | cut -d "." -f2)
     rm -f /tmp/iam_payload.json
     echo "$iam_payload" | base64 -d  | jq '.' >> /tmp/iam_payload.json
@@ -127,22 +133,20 @@ EOF
     cat /tmp/config.json
     cp /tmp/config.json /home/appuser/.bluemix/
     mkdir -p /home/nobody/.bluemix/
-    cp /tmp/config.json /home/nobody/.bluemix/  
-    cat /home/appuser/.bluemix/config.json
-    cat /home/nobody/.bluemix/config.json
+    cp /tmp/config.json /home/nobody/.bluemix/
+
     
 }
 
-
-_init()
+# export remote cluster config 
+#   1. using curl endpoint to download the clsuter_config.zip with IC_IAM_TOKEN, IC_IAM_REFRESH_TOKEN (available in env)
+#       with remote cluster details (from payload)
+#   2. export the downloaded config.
+function 2_export_kube_config()
 {
+    # this is weired, as these are already in the image but some it fails 
     ibmcloud plugin install kubernetes-service
     ibmcloud plugin install container-registry
-    build_config_json
-    #chek IBMcloud login is working
-    ibmcloud ks clusters
-    cat /home/appuser/.bluemix/config.json
-    cat /home/nobody/.bluemix/config.json
     curl -X GET "${ibm_ks_endpoint}/global/v1/clusters/${NAME}/config" -H "accept: application/json" -H "Authorization: ${IC_IAM_TOKEN}" -H "X-Auth-Refresh-Token: ${IC_IAM_REFRESH_TOKEN}" -o /tmp/kubeconfig.zip
     chmod +x /tmp/kubeconfig.zip
     rm -f /tmp/kube_conf_dtls.txt
@@ -152,16 +156,25 @@ _init()
     kube_dir=/tmp/$(cat /tmp/kube_conf_dtls.txt | awk 'FNR == 4 {print $4}')
     KUBECONFIG=/tmp/$(cat /tmp/kube_conf_dtls.txt | grep ".yml" | awk 'FNR == 1 {print $4}')
     export KUBECONFIG=$KUBECONFIG
+}
+
+# TODO handle cluster_type, do this only for openshift
+# OpenShift cluster login using temp api_key.
+# 1. Generate temp api_key using
+# 2. login to OC console, so that job can be executed.
+function 3_oc_login_with_apikey()
+{
     apikey=$(ibmcloud iam api-key-create OC_TEMP -d "temp api key for OC login" | grep "API Key" | tr -s " " | cut -d" " -f3)
     echo "apiKey : " $apikey
     oc_server=$(cat $KUBECONFIG | grep "server" | awk 'FNR == 1 {print $2}')
     oc login -u apikey -p $apikey --server=$oc_server || true
     #ic iam api-key-delete OC_TEMP -f > /dev/null 2>&1
-    create_namepsace
-    
+
 }
 
-create_namepsace()
+# Creating `schematics` namespace on remote cluster.
+# This namespace used for the installation, job execution.
+function 4_create_namepsace()
 {
     namespace="schematics"
     schematics_namespace=$(kubectl get namespace | grep $namespace | awk 'FNR == 1 {print $1}')
@@ -177,13 +190,13 @@ create_namepsace()
     
 }
 
-_init
+function 5_create_installer_job()
+{
 
 #TODO
 # JOB name should have workspace id or name.
-
 currnet_timestamp=`date "+%Y%m%d-%H%M%S"`
-job_name="installer-"$currnet_timestamp
+job_name="installer_"$currnet_timestamp
 
 export NAMESPACE=schematics
 
@@ -245,26 +258,37 @@ EOF
 POD=$(kubectl get pods -n ${NAMESPACE} -l app=${job_name} -o jsonpath="{.items[0].metadata.name}")
 echo "Waiting for ${POD} is running"
 for ((retry=0;retry<=9999;retry++)); do
-  oc get pod ${POD} -n ${NAMESPACE} |grep '1/1'
+  kubectl get pod ${POD} -n ${NAMESPACE} |grep '1/1'
   [[ $? -eq 0 ]] && break
   
   # 15 min timeout
   if [[ ${retry} -eq 90 ]]; then
     echo "Timeout to wait for installer pod up and running, it could be the image pull failing."
-    echo "Please use command 'oc get pod ${POD}' to check details"
+    echo "Please use command 'kubectl get pod ${POD}' to check details"
     exit 1
   fi
-    
   sleep 10
 done
 
-sleep 3
 echo "Tailing the pod log"
-oc logs -n ${NAMESPACE} --follow $POD
+kubectl logs -n ${NAMESPACE} --follow $POD
 sleep 10
-exit $(oc get pods -n ${NAMESPACE} ${POD} -o jsonpath="{.status.containerStatuses[0].state.terminated.exitCode}")
+exit $(kubectl get pods -n ${NAMESPACE} ${POD} -o jsonpath="{.status.containerStatuses[0].state.terminated.exitCode}")
+
+}
 
 
-#sleep 6000
+run_remote_job()
+{
+    1_build_config_json
+    #chek IBMcloud login is working
+    ibmcloud ks clusters
+    2_export_kube_config
+    3_oc_login_with_apikey
+    4_create_namepsace
+    5_create_installer_job
+}
+
+run_remote_job
 
 
