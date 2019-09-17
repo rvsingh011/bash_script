@@ -142,7 +142,7 @@ _init()
     #chek IBMcloud login is working
     ibmcloud ks clusters
     cat /home/appuser/.bluemix/config.json
-    cat /home/appuser/.nobody/config.json
+    cat /home/nobody/.bluemix/config.json
     curl -X GET "${ibm_ks_endpoint}/global/v1/clusters/${NAME}/config" -H "accept: application/json" -H "Authorization: ${IC_IAM_TOKEN}" -H "X-Auth-Refresh-Token: ${IC_IAM_REFRESH_TOKEN}" -o /tmp/kubeconfig.zip
     chmod +x /tmp/kubeconfig.zip
     rm -f /tmp/kube_conf_dtls.txt
