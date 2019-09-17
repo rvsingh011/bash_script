@@ -251,11 +251,11 @@ spec:
 EOF
 [[ $? -ne 0 ]] && exit 1
 
-
+sleep 10
 POD=$(kubectl get pods -n ${NAMESPACE} -l app=${job_name} -o jsonpath="{.items[0].metadata.name}")
 echo "Waiting for ${POD} is running"
 for ((retry=0;retry<=9999;retry++)); do
-  kubectl get pod ${POD} -n ${NAMESPACE} |grep '1/1'
+  oc get pod ${POD} -n ${NAMESPACE} |grep '1/1'
   [[ $? -eq 0 ]] && break
   
   # 15 min timeout
@@ -270,7 +270,7 @@ done
 echo "Tailing the pod log"
 kubectl logs -n ${NAMESPACE} --follow $POD
 sleep 10
-exit $(kubectl get pods -n ${NAMESPACE} ${POD} -o jsonpath="{.status.containerStatuses[0].state.terminated.exitCode}")
+exit $(oc get pods -n ${NAMESPACE} ${POD} -o jsonpath="{.status.containerStatuses[0].state.terminated.exitCode}")
 
 }
 
