@@ -35,7 +35,7 @@ trap finish 0 1 2 3 6 15
 function build_config_json
 {
     iam_payload=$(echo -n "$IC_IAM_TOKEN" | cut -d "." -f2)
-    rf -f /tmp/iam_payload.json
+    rm -f /tmp/iam_payload.json
     echo "$iam_payload" | base64 -d  | jq '.' >> /tmp/iam_payload.json
     account_id=$(cat /tmp/iam_payload.json | jq '.account.bss')
     echo "account id : $account_id"
