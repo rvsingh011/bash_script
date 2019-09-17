@@ -37,11 +37,11 @@ function build_config_json
     iam_payload=$(echo -n "$IC_IAM_TOKEN" | cut -d "." -f2)
     rm -f /tmp/iam_payload.json
     echo "$iam_payload" | base64 -d  | jq '.' >> /tmp/iam_payload.json
-    account_id=$(cat /tmp/iam_payload.json | jq '.account.bss')
+    account_id=$(cat iam_payload.json | jq '.account.bss' | tr -d '"')
     echo "account id : $account_id"
-    account_name=$(cat /tmp/iam_payload.json | jq '.name')
+    account_name=$(cat iam_payload.json | jq '.name'| tr -d '"')
     echo "account_name  : $account_name"
-    account_owner=$(cat /tmp/iam_payload.json | jq '.email')
+    account_owner=$(cat iam_payload.json | jq '.email'| tr -d '"')
     echo "account_owner  : $account_owner"
     iss_api=$(cat /tmp/iam_payload.json | jq '.iss')
     echo "iss_api : $iss_api"
