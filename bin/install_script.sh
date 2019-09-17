@@ -179,7 +179,92 @@ create_namepsace()
 
 _init
 
+#TODO
+# JOB name should have workspace id or name.
 
-sleep 6000
+currnet_timestamp=`date "+%Y%m%d-%H%M%S"`
+job_name = "installer_"$currnet_timestamp
+
+export NAMESPACE=schematics
+
+cat << EOF | kubectl apply --namespace schematics -f - 
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${job_name}
+  labels:
+    app: ${job_name}
+spec:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: ${job_name}
+    spec:
+      restartPolicy: Never
+      containers:
+      - env:
+        - name: NAMESPACE 
+          value: ${NAMESPACE}
+        - name: TILLER_NAMESPACE
+          value: ${TILLER_NAMESPACE}
+        - name: INSTALL_TILLER
+          value: "${INSTALL_TILLER}"
+        - name: TILLER_IMAGE
+          value: ${TILLER_IMAGE}
+        - name: TILLER_TLS
+          value: "${TILLER_TLS}"
+        - name: STORAGE_CLASS
+          value: ${STORAGE_CLASS}
+        - name: DOCKER_REGISTRY
+          value: ${DOCKER_REGISTRY}
+        - name: DOCKER_USERNAME
+          value: ${DOCKER_USERNAME}
+        - name: DOCKER_REGISTRY_USER
+          value: ${DOCKER_USERNAME}
+        - name: DOCKER_REGISTRY_PASS
+          value: ${DOCKER_REGISTRY_PASS}
+        - name: CONSOLE_ROUTE_PREFIX
+          value: ${CONSOLE_ROUTE_PREFIX}
+        - name: CP4D_NGINX_RESOLVER
+          value: ${CP4D_NGINX_RESOLVER}
+        name: schematics-installer
+        image: us.icr.io/schemtics/icp4data:1.2
+        resources:
+          limits:
+            memory: "200Mi"
+            cpu: 1
+      
+EOF
+[[ $? -ne 0 ]] && exit 1
+
+
+POD=$(kubectl get pods -n ${NAMESPACE} -l app=${job_name} -o jsonpath="{.items[0].metadata.name}")
+echo "Waiting for ${POD} is running"
+for ((retry=0;retry<=9999;retry++)); do
+  oc get pod ${POD} -n ${NAMESPACE} |grep '1/1'
+  [[ $? -eq 0 ]] && break
+  
+  # 15 min timeout
+  if [[ ${retry} -eq 90 ]]; then
+    echo "Timeout to wait for installer pod up and running, it could be the image pull failing."
+    echo "Please use command 'oc get pod ${POD}' to check details"
+    exit 1
+  fi
+    
+  sleep 10
+done
+
+sleep 3
+echo "Tailing the pod log"
+oc logs -n ${NAMESPACE} --follow $POD
+sleep 10
+exit $(oc get pods -n ${NAMESPACE} ${POD} -o jsonpath="{.status.containerStatuses[0].state.terminated.exitCode}")
+
+
+#sleep 6000
 
 
