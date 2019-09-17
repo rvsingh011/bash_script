@@ -26,9 +26,12 @@ trap finish 0 1 2 3 6 15
 _init()
 {
     printf "%s" "$CONFIG_JSON" > /home/appuser/.bluemix/config.json
+    rm -f /home/nobody/.bluemix/config.json
+    find / -name config.jso
     #printf "%s" "$CONFIG_JSON" > /root/.bluemix/config.json
     cat /home/appuser/.bluemix/config.json
     #cat /root/.bluemix/config.json
+    ibmcloud ks clusters
     export IAM_END_POINT="https://containers.cloud.ibm.com"
     curl -X GET "${IAM_END_POINT}/global/v1/clusters/${NAME}/config" -H "accept: application/json" -H "Authorization: ${IC_IAM_TOKEN}" -H "X-Auth-Refresh-Token: ${IC_IAM_REFRESH_TOKEN}" -o /tmp/kubeconfig.zip
     chmod +x /tmp/kubeconfig.zip
