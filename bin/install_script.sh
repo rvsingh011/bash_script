@@ -124,7 +124,9 @@ EOF
     sed -i "s%iam_endpoint%$iam_endpoint%g" /tmp/config.json
     sed -i "s/IC_IAM_REFRESH_TOKEN/$IC_IAM_REFRESH_TOKEN/g" /tmp/config.json
     sed -i "s/IC_IAM_TOKEN/$IC_IAM_TOKEN/g" /tmp/config.json
+    cat /tmp/config.json
     cp /tmp/config.json /home/appuser/.bluemix/
+    mkdir -p /home/nobody/.bluemix/
     mv /tmp/config.json /home/nobody/.bluemix/
     
     
