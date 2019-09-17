@@ -5,7 +5,7 @@ printenv
 
 
 # TODO Remove verbose once verified in stage.
-set -xe
+set -e
 #kube_dir=""
 #apikey=""
 namespace=schematics
@@ -65,4 +65,4 @@ create_namepsace()
 _init
 
 
-#sleep 3000
+sleep 30000
