@@ -56,7 +56,7 @@ function build_config_json
     else
         echo "It is prod evn."
         is_prod=true
-        ibm_ks_endpoint="https://containers.cloud.ibm.com/global"
+        ibm_ks_endpoint="https://containers.cloud.ibm.com"
         api_endpoint="https://cloud.ibm.com"
         iam_endpoint="https://iam.cloud.ibm.com"
         cloud_name="bluemix"
