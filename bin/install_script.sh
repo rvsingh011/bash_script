@@ -3,7 +3,7 @@
 
 
 # TODO Remove verbose once verified in stage.
-set -xe
+set -x
 printenv
 
 #kube_dir=""
@@ -179,6 +179,6 @@ create_namepsace()
 _init
 
 
-sleep 4000
+sleep 6000
 
 
