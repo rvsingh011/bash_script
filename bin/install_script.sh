@@ -22,12 +22,12 @@ function finish {
     echo "deleting KUBECONFIG details..."
     #rm -rf $kube_dir/
     ic iam api-key-delete OC_TEMP -f > /dev/null 2>&1
-    rm -f /tmp/config.json
-    rm -f /tmp/iam_payload.json
-    rm -f /home/appuser/.bluemix/config.json
-    rm -f /home/nobody/.bluemix/config.json
-    rm -f /tmp/kube_conf_dtls.txt
-    rm -rf /tmp/*.*
+    #rm -f /tmp/config.json
+    #rm -f /tmp/iam_payload.json
+    #rm -f /home/appuser/.bluemix/config.json
+    #rm -f /home/nobody/.bluemix/config.json
+    #rm -f /tmp/kube_conf_dtls.txt
+    #rm -rf /tmp/*.*
     
 }
 trap finish 0 1 2 3 6 15
