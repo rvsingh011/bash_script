@@ -25,6 +25,10 @@ trap finish 0 1 2 3 6 15
 
 _init()
 {
+    ibmcloud plugin list
+    ibmcloud plugin install kubernetes-service
+    ibmcloud plugin install container-registry
+    ibmcloud plugin list
     printf "%s" "$CONFIG_JSON" > /home/appuser/.bluemix/config.json
     rm -f /home/nobody/.bluemix/config.json
     find / -name config.jso
