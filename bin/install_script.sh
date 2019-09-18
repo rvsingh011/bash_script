@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TODO Remove verbose once verified in stage.
-set -xe
+set -x
 printenv
 
 #kube_dir=""
@@ -243,11 +243,17 @@ spec:
           value: ${CP4D_NGINX_RESOLVER}
         name: schematics-installer
         image: us.icr.io/schemtics/icp4data:1.2
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-mount 
         resources:
           limits:
             memory: "200Mi"
             cpu: 1
-      
+      volumes: 
+      - name: tmp-mount
+        hostPath:
+          path: /tmp 
 EOF
 [[ $? -ne 0 ]] && exit 1
 
